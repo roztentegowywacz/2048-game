@@ -13,15 +13,17 @@ class G2048
 {
     int Score;
     int Total;
+    int FreeTiles;
 
 public:
     G2048();
     void StartGame();
-    void Move();
 private:
     Tile Board[4][4];
     void DrawBoard();
     void AddTile();
+    void Move();
+    void CheckWinOrLoose();
     void MoveUp();
     void MoveRight();
     void MoveDown();

@@ -6,10 +6,12 @@
 
 Tile::Tile() : Value(0), Blocked(false) {}
 
-G2048::G2048() : Score(0), Total(0) { }
+G2048::G2048() : Score(0), Total(0), FreeTiles(16) { }
 
 void G2048::StartGame()
 {
+	AddTile();
+	
 	do
 	{
 		std::cout << "\033[2J";		// it is ASCII code to clear the console
@@ -18,6 +20,7 @@ void G2048::StartGame()
 		std::cout << "Your score: "<< Total <<" (+" << Score << ")\n\n";
 		DrawBoard();
 		Move();
+		CheckWinOrLoose();
 	}
 	while(true);
 
@@ -44,19 +47,24 @@ void G2048::DrawBoard()
 
 void G2048::AddTile()
 {
-    int x, y;
-    do
-    {
-        x = rand() % 4;
-        y = rand() % 4;
-    }
-    while(Board[x][y].Value != 0);
-        
-    int RandomValue = rand() % 100;
-    if(RandomValue > 89)
-        Board[x][y].Value = 4;
-    else
-        Board[x][y].Value = 2;
+	if(FreeTiles > 0)
+	{
+		int x, y;
+		do
+		{
+			x = rand() % 4;
+			y = rand() % 4;
+		}
+		while(Board[x][y].Value != 0);
+			
+		int RandomValue = rand() % 100;
+		if(RandomValue > 89)
+			Board[x][y].Value = 4;
+		else
+			Board[x][y].Value = 2;
+
+		FreeTiles--;
+	}
 }
 
 void G2048::MoveVertical(int x, int y, int dy)
@@ -68,6 +76,7 @@ void G2048::MoveVertical(int x, int y, int dy)
 		Board[x][y + dy].Blocked = true;
 		Score = Board[x][y + dy].Value;
 		Total += Score;
+		FreeTiles++;
 	}
 	else if(Board[x][y].Value != 0 && Board[x][y + dy].Value == 0)
 	{
@@ -95,6 +104,7 @@ void G2048::MoveHorisontal(int x, int y, int dx)
 		Board[x + dx][y].Blocked = true;
 		Score = Board[x + dx][y].Value;
 		Total += Score;
+		FreeTiles++;
 	}
 	else if(Board[x][y].Value != 0 && Board[x + dx][y].Value == 0)
 	{
@@ -164,13 +174,16 @@ void G2048::MoveRight()
 void G2048::Move()
 {
 	std::cout << "\n\nPlease push one of the below button:\n";
-	std::cout << "(W)Up (S)Down (A)Left (D)Right\n\n";
-	std::cout << "Or press (E) to exit\n\n";
+	std::cout << "(W)Up (S)Down (A)Left (D)Right  -> (E)Exit <-\n\n";
+	
+	// Reset Blocked value and set the Score to 0.
 	for(int x = 0; x < 4; ++x)
 	{
 		for(int y = 0; y < 4; ++y)
 			Board[x][y].Blocked = false;
 	}
+	Score = 0;
+
 	char PushButton;
 	std::cin >> PushButton;
 	switch(toupper(PushButton))
@@ -195,5 +208,27 @@ void G2048::Move()
 				exit(0);
 			else
 				Move();
+	}
+}
+
+void G2048::CheckWinOrLoose()
+{
+	if(FreeTiles < 1)
+	{
+		std::cout << "\n\nSorry, you loose the game. \n"; 
+		std::cout << "Press any key to exit. \n"; 
+		std::cin.get();
+		exit(0);
+	}
+	if(Score >= 2048)
+	{
+		std::cout << "-------- YOU WIN! --------\n";
+		// std::cout << "Would you like to continue? y/n\n";
+		// char c;
+		// 	std::cin >> c;
+		// 	if(toupper(c) == 'Y')
+		// 		return true;		
+		// 	else
+				exit(0);
 	}
 }
