@@ -2,25 +2,24 @@
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>
+#include <ctype.h>
 
-Tile::Tile() : Value(0) {}
+Tile::Tile() : Value(0), Blocked(false) {}
+
+G2048::G2048() : Score(0), Total(0) { }
 
 void G2048::StartGame()
 {
-	AddTile();
-	AddTile();
-	AddTile();
-	AddTile();
-	AddTile();
-	DrawBoard();
-	MoveUp();
-	DrawBoard();
-	MoveRight();
-	DrawBoard();
-	MoveDown();
-	DrawBoard();
-	MoveLeft();
-	DrawBoard();
+	do
+	{
+		std::cout << "\033[2J";		// it is ASCII code to clear the console
+		std::cout << "\033[1;1H";	// this line positions the cursor at row 1, column 1
+		AddTile();
+		std::cout << "Your score: "<< Total <<" (+" << Score << ")\n\n";
+		DrawBoard();
+		Move();
+	}
+	while(true);
 
 }
 
@@ -40,7 +39,7 @@ void G2048::DrawBoard()
 	    }
 	    std::cout << '\n';
 	}
-    std::cout << "+------+------+------+------+\n\n";
+    std::cout << "+------+------+------+------+\n";
 }
 
 void G2048::AddTile()
@@ -62,7 +61,15 @@ void G2048::AddTile()
 
 void G2048::MoveVertical(int x, int y, int dy)
 {
-	if(Board[x][y].Value != 0 && Board[x][y + dy].Value == 0)
+	if(Board[x][y + dy].Value != 0 && Board[x][y + dy].Value == Board[x][y].Value && !Board[x][y + dy].Blocked && !Board[x][y].Blocked)
+	{
+		Board[x][y + dy].Value *= 2;
+		Board[x][y].Value = 0;
+		Board[x][y + dy].Blocked = true;
+		Score = Board[x][y + dy].Value;
+		Total += Score;
+	}
+	else if(Board[x][y].Value != 0 && Board[x][y + dy].Value == 0)
 	{
 		Board[x][y + dy].Value = Board[x][y].Value;
 		Board[x][y].Value = 0;
@@ -81,7 +88,15 @@ void G2048::MoveVertical(int x, int y, int dy)
 
 void G2048::MoveHorisontal(int x, int y, int dx)
 {
-	if(Board[x][y].Value != 0 && Board[x + dx][y].Value == 0)
+	if(Board[x + dx][y].Value != 0 && Board[x + dx][y].Value == Board[x][y].Value && !Board[x + dx][y].Blocked && !Board[x][y].Blocked)
+	{
+		Board[x + dx][y].Value *= 2;
+		Board[x][y].Value = 0;
+		Board[x + dx][y].Blocked = true;
+		Score = Board[x + dx][y].Value;
+		Total += Score;
+	}
+	else if(Board[x][y].Value != 0 && Board[x + dx][y].Value == 0)
 	{
 		Board[x + dx][y].Value = Board[x][y].Value;
 		Board[x][y].Value = 0;
@@ -143,5 +158,42 @@ void G2048::MoveRight()
 			if(Board[x][y].Value)
 				MoveHorisontal(x, y, 1);
 		}
+	}
+}
+
+void G2048::Move()
+{
+	std::cout << "\n\nPlease push one of the below button:\n";
+	std::cout << "(W)Up (S)Down (A)Left (D)Right\n\n";
+	std::cout << "Or press (E) to exit\n\n";
+	for(int x = 0; x < 4; ++x)
+	{
+		for(int y = 0; y < 4; ++y)
+			Board[x][y].Blocked = false;
+	}
+	char PushButton;
+	std::cin >> PushButton;
+	switch(toupper(PushButton))
+	{
+		case 'W':
+			MoveUp();
+			break;
+		case 'D':
+			MoveRight();
+			break;
+		case 'S':
+			MoveDown();
+			break;
+		case 'A':
+			MoveLeft();
+			break;
+		case 'E':
+			std::cout << "Are you shure? Please, press one of the key: y/n\n";
+			char c;
+			std::cin >> c;
+			if(toupper(c) == 'Y')
+				exit(0);
+			else
+				Move();
 	}
 }
